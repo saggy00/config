@@ -1,0 +1,135 @@
+!######## DPI Settings ########!
+Xft.antialias:  1
+Xft.autohint:   0
+Xft.dpi:        120
+Xft.hinting:    1
+Xft.hintstyle:  hintslight
+Xft.lcdfilter:  lcddefault
+Xft.rgba:       rgb
+
+Xcursor.size:   16
+
+!############ URxvt ############!
+! For more, read the manual: https://linux.die.net/man/1/urxvt
+! General
+URxvt.loginShell:       true
+URxvt.termName:         rxvt-unicode-256color
+URxvt.geometry:         80x24
+URxvt.letterSpace:      -1
+URxvt.title:            URxvt
+URxvt.iconFile:         /usr/share/icons/gnome/scalable/apps/utilities-terminal-symbolic.svg
+URxvt.cursorBlink:      false
+URxvt.urgentOnBell:     true
+
+! Scrollbar
+URxvt.scrollBar:        true
+URxvt.scrollBar_right:  true
+URxvt.thickness:        5
+URxvt.scrollstyle:      plain
+URxvt.saveLines:        65535
+URxvt.secondaryScroll:  true
+URxvt.scrollColor:      #828282
+
+! Borders
+URxvt.externalBorder:   0
+URxvt.internalBorder:   0
+URxvt.borderLess:       false
+URxvt.borderColor:      #000000
+
+! Misc configuration
+URxvt.iso14755:     False
+URxvt.iso14755_52:  False
+
+! Extensions
+URxvt.perl-lib:        /usr/lib/urxvt/perl/
+URxvt.perl-ext-common: default,matcher,font-size,clipboard,keyboard-select
+
+!  - catch ugly URLs
+!urxvt.cutchars:        "()'*<>[]{|}"
+
+
+! Appearance
+! Notice the difference of size (relative to dpi) and pixelsize (absolute)
+!URxvt.font: xft:Monospace:pixelsize=13
+!URxvt.font: xft:Menlo for Powerline:style=Regular:size=10, xft:InconsolataForPowerline Nerd Font:style=Medium
+!URxvt.font: xft:Ubuntu Mono derivative Powerline:style=Regular:pixelsize=16
+
+URxvt.font:xft:Menlo for Powerline:style=Regular:size=10
+URxvt.italicFont:xft:Menlo for Powerline:style=Italic:size=10
+URxvt.boldFont:xft:Menlo for Powerline:style=Bold:size=10
+URxvt.boldItalicFont:xft:Menlo for Powerline:style=Bold Italic:size=10
+
+
+! Color configuration
+URxvt.transparent:  false
+URxvt.shading:      100
+URxvt.depth:        32
+URxvt.background:   rgba:0000/0000/0000/e800
+URxvt.foreground:   #C4C4B5
+
+URxvt.tintColor:    #262626
+URxvt.cursorColor:  #f2e5cf
+
+! black
+URxvt.color0:       #191919
+URxvt.color8:       #615E4B
+
+! red
+URxvt.color1:       #F30020
+URxvt.color9:       #F3005F
+
+! green
+URxvt.color2:       #97E023
+URxvt.color10:      #97E023
+
+! yellow
+URxvt.color3:       #FA8419
+URxvt.color11:      #DFD561
+
+! blue
+URxvt.color4:       #9C64FE
+URxvt.color12:      #9C64FE
+
+! magenta
+URxvt.color5:       #F3005F
+URxvt.color13:      #F3005F
+
+! cyan
+URxvt.color6:       #57D1EA
+URxvt.color14:      #57D1EA
+
+! white
+URxvt.color7:       #C4C4B5
+URxvt.color15:      #F6F6EE
+
+
+
+! `keyboard-select` extension configuration
+!! https://github.com/muennich/urxvt-perls
+URxvt.keysym.M-Escape:  keyboard-select:activate
+URxvt.keysym.M-s:       keyboard-select:search
+
+! `matcher` extension configuration
+!! Provided with urxvt
+URxvt.url-launcher:       firefox
+URxvt.keysym.C-Delete:    matcher:last
+URxvt.keysym.M-Delete:    matcher:list
+URxvt.matcher.button:     1
+URxvt.matcher.pattern.1:  \\bwww\\.[\\w-]+\\.[\\w./?&@#-]*[\\w/-]
+URxvt.matcher.pattern.2:  \\B(/\\S+?):(\\d+)(?=:|$)
+URxvt.matcher.launcher.2: gvim +$2 $1
+
+! `font-size` extension configuration
+!! https://github.com/majutsushi/urxvt-font-size
+URxvt.keysym.C-Up:     font-size:increase
+URxvt.keysym.C-Down:   font-size:decrease
+URxvt.keysym.C-S-Up:   font-size:incglobal
+URxvt.keysym.C-S-Down: font-size:decglobal
+URxvt.keysym.C-equal:  font-size:reset
+URxvt.keysym.C-slash:  font-size:show
+
+! `clipboard` extension configuration (xsel is needed)
+!! Provided with urxvt
+URxvt.keysym.C-S-C: clipboard:copy
+URxvt.keysym.C-S-V: clipboard:paste
+
