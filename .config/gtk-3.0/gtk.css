@@ -1,0 +1,21 @@
+  .solid-csd decoration {
+    border-radius: 0;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    box-shadow: none; }
+
+decoration {
+  border: 0;
+
+}
+
+/*
+  .solid-csd & {
+    &:backdrop, & {
+      margin-left: -1px;
+      margin-right: -1px;
+      margin-top: -1px;
+      border-radius: 0;
+      box-shadow: none;
+    }
+*/
