@@ -1,0 +1,18 @@
+Xft/Antialias 1
+Xft/DPI 120
+Xft/Hinting 1
+Xft/HintStyle "hintslight"
+Xft/RGBA "rgb"
+
+Net/ThemeName "Vertex"
+Gtk/IconThemeName "Vertex-Icons"
+Gtk/FontName "Noto Sans 11"
+
+Gtk/MenuImages 1
+
+
+Gtk/CursorThemeName "Paper"
+Gtk/CursorThemeSize 0
+
+Gtk/EnableEventSounds 1
+Gtk/EnableInputFeedbackSounds 1

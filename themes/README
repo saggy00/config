@@ -1,3 +1,6 @@
+The configuration can also be generated using `lxappearence`
+yay -S lxappearence
+
 After installing the themes, use lxappearence to set the gtk2 config:
 Widget tab -> Vertex
 Color -> nothing
