@@ -1,5 +1,6 @@
+# Note: For DPI we multiply by 1024, thus 120 * 1024 = 122880
 Xft/Antialias 1
-Xft/DPI 120
+Xft/DPI 122880
 Xft/Hinting 1
 Xft/HintStyle "hintslight"
 Xft/RGBA "rgb"
