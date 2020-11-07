@@ -1,0 +1,1 @@
+The `iconFile` configuration option may not work. We need to compile rxvt with the flag `--enable-pixbuf` in the PKGBUILD.
