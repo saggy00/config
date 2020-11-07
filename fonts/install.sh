@@ -14,4 +14,9 @@ yay -S ttf-dejavu ttf-bitstream-vera ttf-freefont ttf-gentium-basic \
     ttf-inconsolata ttf-liberation ttf-linux-libertine ttf-mgopen \
     ttf-monaco ttf-opensans 
 
-"$DIR"/win10_fonts
+"$DIR"/win10_fonts/install.sh
+
+mkdir -p ~/.config/fontconfig
+cp "$DIR"/fonts.conf ~/.config/fontconfig
+
+echo "Reboot"
