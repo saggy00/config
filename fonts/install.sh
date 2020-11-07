@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 yay -S adobe-source-code-pro-fonts cantarell-fonts font-bh-ttf \
     gnu-free-fonts gsfonts noto-fonts noto-fonts-extra \
     powerline-fonts terminus-font ttf-qurancomplex-fonts \
@@ -11,3 +13,5 @@ yay -S adobe-source-code-pro-fonts cantarell-fonts font-bh-ttf \
 yay -S ttf-dejavu ttf-bitstream-vera ttf-freefont ttf-gentium-basic \
     ttf-inconsolata ttf-liberation ttf-linux-libertine ttf-mgopen \
     ttf-monaco ttf-opensans 
+
+"$DIR"/win10_fonts
