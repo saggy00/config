@@ -12,6 +12,8 @@ yay -S gnome-icon-theme gnome-icom-themes-extra gnome-icon-theme-symbolic
 yay -S vertex-icons-git vertex-themes-git paper-gtk-theme-git paper-icon-theme-git
 
 cat "$DIR"/xconfig >> ~/.Xresources
+cp "$DIR"/gtkrc-2.0 ~/.gtkrc-2.0
+cp -r "$DIR"/gtk-3.0 ~/.config
 
 mkdir -p ~/.icons/default
 cp "$DIR"/icons/defaut/theme.index ~/.icons/default
