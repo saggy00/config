@@ -1,3 +1,5 @@
+
+
 !############ URxvt ############!
 ! For more, read the manual: https://linux.die.net/man/1/urxvt
 ! General
@@ -121,3 +123,4 @@ URxvt.keysym.C-slash:  font-size:show
 !! Provided with urxvt
 URxvt.keysym.C-S-C: clipboard:copy
 URxvt.keysym.C-S-V: clipboard:paste
+
