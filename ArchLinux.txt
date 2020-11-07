@@ -1,0 +1,1539 @@
+Εγκατάσταση Arch Linux στο Lenovo Thinkpad T430
+
+Στο συγκεκριμένο οδηγό θα εγκαταστήσουμε το Arch Linux σε δίσκο SSD,
+χωρίς να κάνουμε Dual Boot.
+
+Ενότητα 0: Προετοιμασία του μέσου εγκατάστασης
+Θεωρούμε πως έχουμε στη διάθεσή μας ένα υπολογιστή με λειτουργικό σύστημα Windows. Κατεβάζουμε το εργαλείο rufus (https://rufus.akeo.ie/) και την εικόνα του Arch (http://ftp.ntua.gr/pub/linux/archlinux/iso/2015.08.01/archlinux-2015.08.01-dual.iso).
+
+Χρησιμοποιώντας το rufus, και έχοντας στη διάθεσή μας ένα USB Flash Drive, εγγράφουμε την εικόνα του Arch τονίζοντας ότι επιλέγουμε GPT UEFI mode (στο rufus).
+
+Ενότητα 1: Εγκατάσταση του βασικού συστήματος
+1.Κάνουμε boot από το USB Flash Drive και ξεκινάμε την εγκατάσταση.
+2.Ελέγχουμε ότι έχουμε bootάρει σε UEFI mode γράφοντας την εντολή:
+	# efivar -l
+  Αν η εντολή αυτή παράξει output, τότε είμαστε όντως σε UEFI mode.
+3.Συνδεόμαστε μέσω WIFI σε κάποιο δίκτυο. Αρχικά γράφουμε την εντολή
+	# wifi-menu
+  Επιλέγουμε το δίκτυό μας και βάζουμε το password. Πατάμε enter και περιμένουμε να γίνει το authentication με το router.
+4.Ελέγχουμε ότι έχουμε πρόσβαση στο internet δίνοντας την εντολή:
+	# ping -c 3 www.google.com
+  Αν το packet loss είναι 0%, τότε έχουμε πρόσβαση στο internet.
+  Έχοντας εξασφαλίζει την πρόσβαση στο internet, ρυθμίζουμε την ώρα δίνοντας
+  την εντολή:
+	# timedatectl set-ntp true
+
+5.Αναγνωρίζουμε πως έχει αναγνωρίσει το Live OS τον SSD δίνοντας την εντολή:
+	# lsblk
+  Σημείωση: Θεωρούμε ότι από εδώ και στο εξής ο SSD είναι η Block Device /dev/sda
+6.Δημιουγία του Partition Table και διαμόρφωση του SSD.
+  Εφόσον θέλουμε να έχουμε GPT Partition Table Scheme, θα χρησιμοποιήσουμε το εργαλείο gdisk.
+  Βάσει της υπόθεσης του βήματος 5, δίνουμε την εντολή:
+	# gdisk /dev/sda
+  Δημιουργούμε το GUID Partition Table και καταστρέφουμε τα πάντα στο δίσκο δίνοντας την εντολή:
+	Command (? for help): o
+  Επαναλαμβάνουμε το ακόλουθο βήμα για δημιουργήσουμε όσα partitions θέλουμε. Συγκεκριμένα, θα δημιουργήσουμε boot, root και home partition. Έτσι:
+	Command (? for help): n
+	Δίνουμε μέγεθος 1024Μ και τύπο του partition EF00
+
+	Command (? for help): n
+	Δίνουμε μέγεθος 30G και τύπο του partition 8300
+
+	Command (? for help): n
+	Δίνουμε μέγεθος ~G (υπόλοιπο χώρο) και τύπο του partition 8300
+
+  Βλέπουμε τα partitions που φτιάξαμε (δεν έχουμε κάνει ακόμα commit) με την εντολή:
+	Command (? for help): p
+
+  Οριστικοποιούμε τις αλλαγές και βγαίνουμε από το πρόγραμμα πατώντας
+	Command (? for help): w
+
+  Για να διαμορφώσουμε τα partitions κάνουμε:
+	# mkfs.fat -F32 /dev/sda1 (για format του /boot)
+	# mkfs.ext4 /dev/sda2 (για format του /)
+	# mkfs.ext4 /dev/sda3 (για format του /home)
+7.Προσάρτηση των partitions
+  Για να πραγματοποιήσουμε την εγκατάσταση, πρέπει να κάνουμε mount τον SSD (που μόλις διαμορφώσαμε στο προηγούμενο βήμα). Έτσι έχουμε:
+	Πρώτα (είναι σημαντικό) κάνουμε mount το root
+	# mount /dev/sda2 /mnt (προσάρτηση του /)
+
+	Έπειτα κάνουμε mount τα υπόλοιπα με όποια σειρά θέλουμε
+	# mkdir /mnt/boot
+	# mount /dev/sda1 /mnt/boot
+
+	# mkdir /mnt/home
+	# mount /dev/sda3 /mnt/home
+8.Εγκατάσταση του συστήματος
+  Αυτό είναι το σημείο στο οποίο απαιτείται η σύνδεση στο internet.
+  Σημείωση: Σε περίπτωση που έχουμε δικό μας repository, μπορούμε να το επιβάλουμε ρυθμίζοντας κατάλληλα το αρχείο /etc/pacman.d/mirrorlist
+
+	Για την εγκατάσταση του συστήματος δίνουμε την εντολή:
+	# pacstrap -i /mnt base base-devel (το -i για interactive mode)
+
+	και αναμένουμε να τελειώσει η διαδικασία.
+
+  Μετά το πέρας της εγκατάστασης, πραγματοποιούμε ρύθμιση στο fstab του νέου συστήματος δίνοντας τις εντολές:
+	# genfstab -U /mnt > /mnt/etc/fstab (το -U σημαίνει mount με το UUID)
+	# cat /mnt/etc/fstab (για να δούμε αν όλα είναι ΟΚ)
+9. Chroot Jail και βασικές ρυθμίσεις
+	Αλλάζουμε το root directory:
+	# arch-chroot /mnt /bin/bash
+
+	Ενεργοποιούμε αγγλικά και ελληνικά locales
+	# nano /etc/locale.gen
+	και κάνουμε uncomment τα en_US.UTF-8 και el_GR.UTF-8.
+	Τέλος, σώζουμε το αρχείο.
+
+	Παράγουμε τα locales
+	# locale-gen
+
+	Ρυθμίζουμε το locale του νέου συστήματος, σώζοντας τα ακόλουθα στο αρχείο  /etc/locale.conf:
+	LANG=el_GR.UTF-8
+	LC_ADDRESS=el_GR.UTF-8
+	LC_COLLATE=C
+	LC_CTYPE=en_US.UTF-8
+	LC_MEASUREMENT=el_GR.UTF-8
+	LC_MESSAGES=en_US.UTF-8
+	LC_MONETARY=el_GR.UTF-8
+	LC_NAME=el_GR.UTF-8
+	LC_NUMERIC=en_US.UTF-8
+	LC_PAPER=el_GR.UTF-8
+	LC_TELEPHONE=el_GR.UTF-8
+	LC_TIME=el_GR.UTF-8
+
+	Ορίζουμε το hostname του υπολογιστή:
+	# echo SaGPad > /etc/hostname
+
+	και βάζουμε το ίδιο hostname στο αρχείο /etc/hosts, οπότε έχουμε:
+	#
+	# /etc/hosts: static lookup table for host names
+	#
+
+	#<ip-address>	<hostname.domain.org>	<hostname>	<name>
+	127.0.0.1	localhost.localdomain	localhost	SaGPad
+	::1		localhost.localdomain	localhost	SaGPad
+
+	# End of file
+
+	Ρύθμιση της ώρας ζώνης:
+	ln -sf /usr/share/zoneinfo/Europe/Athens /etc/localtime
+	
+	Ρύθμιση του hardware clock σε UTC:
+	# hwclock --systohc --utc
+
+	Ρύθμιση του κωδικού του root user:
+	# passwd
+
+	Εγκατάσταση των bootloader utilities:
+	# pacman -S dosfstools
+	
+	Εγκατάσταση του bootx64.efi stub:
+	# bootctl --path=/boot install
+
+	Δημιουγία του αρχείου εκκίνησης:
+	nano /boot/loader/entries/arch.conf
+	title          Arch Linux
+	linux          /vmlinuz-linux
+	initrd         /initramfs-linux.img
+	options        root=/dev/sda2 rw
+
+	Αλλαγή του χρόνου αναμονής:
+	# nano /boot/loader/loader.conf
+	timeout 0
+	default arch
+
+	Ρύθμιση των πακέτων του internet για μετά την εγκατάσταση:
+	# pacman -S iw wpa_supplicant
+	# pacman -S dialog
+
+	Προσθήκη home user:
+	# useradd -m -g users -G wheel -s /bin/bash saggy00
+	# passwd saggy00
+
+	Εγκατάσταση sudo utility
+	# pacman -S sudo
+	# echo 'saggy00 ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers (τον κάνουμε sudoer)
+
+	Ενεργοποίηση του multilib repository:
+	# nano /etc/pacman.conf
+	και κάνουμε uncomment τις γραμμές:
+	[multilib]
+	Include = /etc/pacman.d/mirrorlist
+
+	Τέλος της εγκατάστασης:
+	# exit (έξοδος από το chroot jail)
+	# umount -R /mnt (unmount /boot /home /)
+	# poweroff
+	Μόλις ο υπολογιστής σβήσει, αφαιρούμε το USB Flash Drive
+
+	Όταν ο υπολογιστής ανοίξει, μπαίνουμε με το χρήστη που φτιάξαμε (saggy00) και συνδεόμαστε στο internet μέσω της εντολής wifi-menu. Συγκεκριμένα:
+	$ sudo systemctl start dhcpcd.service (το εκτελούμε μια φορά)
+	$ sudo systemctl enable dhcpcd.service (το εκτελούμε μια φορά)
+	$ sudo wifi-menu
+
+	Κάνουμε update τα repositories δίνοντας την εντολή:
+	$ sudo pacman -Syy
+
+	Tώρα διαθέτουμε ένα λειτουργικό σύστημα χωρίς επιφάνεια εργασίας
+
+Ενότητα 2: Εγκατάσταση των Drivers και βασικών προγραμμάτων
+Προκειμένου να αυξήσουμε τη λειτουργικότητα του υπολογιστή μας, πρέπει να εξασφαλίσουμε την πλήρη υποστήριξη του υλικού.
+0.Έλεγχος του alignment και του trim του SSD
+  Επειδή ο υπολογιστής περιέχει δίσκο SSD, τσεκάρουμε για σιγουριά το alignment ώστε να είμαστε σίγουροι:
+	$ sudo pacman -S parted
+	$ parted /dev/sda
+	$ align-check opt (την εκτελούμε για Partition number 1,2 και 3)
+
+  Επιπλέον ελέγχουμε αν ο SSD υποστηρίζει TRIM:
+	$ sudo pacman -S hdparm
+	$ sudo hdparm -I /dev/sda | grep TRIM
+ 	Αν το TRIM υποστηρίζεται, τότε θα λάβουμε αντίστοιχο μήνυμα που να το αναφέρει.
+
+  Ενεργοποιούμε τον timer fstrim.timer ώστε να τρέχει κάθε μία εβδομάδα:
+  	$ sudo systemctl enable fstrim.timer
+
+  Και τρέχουμε τη διαδικασία (χρειάζεται μόνο για την πρώτη φορά):
+	$ sudo systemctl start fstrim.service
+
+  Σχόλιο: Επαληθεύουμε την ορθή λειτουργία του fstrim service, μέσω των logs που θα έχουν εμφανιστεί από την προηγούμενη εντολή. Τα logs αυτά τα βλέπουμε με τις παρακάτω εντολές:
+	$ sudo systemctl status fstrim.service
+	$ sudo journalctl -u fstrim
+
+1.Αναγνώριση της αλλαγής φωτεινότητας
+  Για να το επιτύχουμε, προσθέτουμε την κατάλληλη παράμετρο κατά το kernel loading. Έτσι, ενημερώνουμε το ACPI για αυτή την πρόσθετη λειτουργία του υλικού.
+  Σχόλιο: Το kernel έχει ήδη ενσωματωμένο το ACPI, το οποίο φορτώνει αυτόματα το thinkpad_acpi module.
+	$ nano /boot/loader/entries/arch.conf
+	και επαυξάνουμε τα options με την παράμετρο acpi_osi="!Windows 2012"
+
+2.Μείωση του verbosity κατά το boot
+  Αυτό επιτυχάνεται με άλλη μία παράμετρο κατά το φόρτωμα του kernel. Συγκεκριμένα πρέπει να επαυξήσουμε τα options με:
+  quiet vga=current
+
+  Τελικά, τα βήματα 1 και 2 διαμορφώνουν το περιεχόμενο του αρχείου /boot/loader/entries/arch.conf ως εξής:
+	title	Arch Linux
+	linux	/vmlinuz-linux
+	initrd	/initramfs-linux.img
+	options	root=/dev/sda2 rw acpi_osi="!Windows 2012" quiet vga=current
+
+3.Εγκατάσταση του Xorg
+  Ο ίδιος ο X Server
+  	$ sudo pacman -S xorg xorg-server xorg-server-utils xorg-xkbutils xorg-xinit xterm
+
+  Αν θέλουμε και 3d υποστήριξη (που δε θέλουμε)
+	$ sudo pacman -S mesa
+
+  Οδηγός κάτρας γραφικών:
+	$ sudo pacman -S xf86-video-intel
+
+  Οδηγός trackpad:
+	$ sudo pacman -S xf86-input-synaptics
+
+  Οδηγός για USB ποντίκια/πληκτρολόγια και για το trackpoint
+	$ sudo pacman -S xf86-input-mouse xf86-input-keyboard xf86-input-evdev
+
+4.Ρύθμιση του trackpoint
+  Για να ενεργοποιήσουμε το scrolling με red dot και middle button
+	$ sudo nano /etc/X11/xorg.conf.d/20-thinkpad.conf (δημιουργία αρχείου)
+	και βάζουμε τα εξής:
+
+	Section "InputClass"
+	    Identifier	"Trackpoint Wheel Emulation"
+	    MatchProduct	"TPPS/2 IBM TrackPoint|DualPoint Stick|Synaptics Inc. Composite TouchPad / TrackPoint|ThinkPad USB Keyboard with TrackPoint|USB Trackpoint pointing device"
+	    MatchDevicePath	"/dev/input/event*"
+	    Option		"EmulateWheel"		"true"
+	    Option		"EmulateWheelButton"	"2"
+	    Option		"Emulate3Buttons"	"false"
+	    Option		"XAxisMapping"		"6 7"
+	    Option		"YAxisMapping"		"4 5"
+	EndSection
+
+  Για να ρυθμίσουμε την ταχύτητα του ποντικιού μέσω της χρήσης του trackpoint, χρησιμοποιούμε udev rules:
+	$ sudo nano /etc/udev/rules.d/10-trackpoint.rules (δημιουργία αρχείου)
+	και βάζουμε μέσα:
+	SUBSYSTEM=="input", ATTRS{name}=="*TrackPoint*", RUN+="/etc/udev/trackpoint.sh"
+
+	$ sudo nano /etc/udev/trackpoint.sh (δημιουργία αρχείου)
+	και βάζουμε μέσα:
+	#! /bin/bash
+
+	## Trackpoint settings
+
+	# When run from a udev rule, DEVPATH should be set
+	if [ ! -z $DEVPATH ] ; then
+	    TPDEV=/sys/$( echo "$DEVPATH" | sed 's/\/input\/input[0-9]*//' )
+	else
+	# Otherwise just look in /sys/
+	    TPDEV=$(find /sys/devices/platform/i8042 -name name | xargs grep -Fl TrackPoint | sed 's/\/input\/input[0-9]*\/name$//')
+	fi
+
+	# http://www.thinkwiki.org/wiki/How_to_configure_the_TrackPoint
+	# http://wwwcssrv.almaden.ibm.com/trackpoint/files/ykt3eext.pdf
+	#------------------------------------------------------------
+	if [ -d "$TPDEV" ]; then
+	    echo "Configuring Trackpoint"
+	    echo -n 255     > $TPDEV/sensitivity     # Integer  128   Sensitivity
+	    echo -n 110     > $TPDEV/speed           # Integer  97   Cursor speed
+	    echo -n 4       > $TPDEV/inertia         # Integer  6   Negative intertia
+	else
+	    echo "Couldn't find trackpoint device $TPDEV"
+	fi
+
+	Σώζουμε το αρχείο και το κάνουμε executable (sudo chmod u+x /etc/udev/trackpoint.sh)
+
+  Σημείωση: Μπορούμε να έχουμε άμεση (αλλά προσωρινή) ρύθμιση, αλλάζοντας τα αρχεία speed, sensitivity και intertia στο directory /sys/devices/platform/i8042/serio1/serio2/
+
+5.Εγκατάσταση του οδηγού ήχου και επίλυση noise pop
+	$ sudo pacman -S alsa-utils alsa-oss pulseaudio pulseaudio-alsa
+
+  Για να επιλύσουμε το noise pop, πρέπει να κάνουμε mute την κάρτα ήχου κατά το shutdown, που στέλνεται στο σήμα SIGTERM σε κάποιο script που κάνει αυτή τη δουλειά.
+
+	Δημιουργούμε το κατάλληλο service:
+	$ sudo nano /usr/lib/systemd/system/sound.service
+	και βάζουμε μέσα:
+
+	[Unit]
+	Description=/etc/rc.local.shutdown Compatibility
+	Before=shutdown.target
+
+	[Service]
+	ExecStart=/bin/true
+	ExecStop=/etc/rc.local.shutdown
+	RemainAfterExit=yes
+
+	[Install]
+	WantedBy=multi-user.target
+
+	Έπειτα φτιάχνουμε το αρχείο rc.local.shutdown
+	$ sudo nano /etc/rc.local.shutdown
+	και βάζουμε μέσα:
+	
+	#!/bin/sh
+	amixer sset Master mute
+
+6.Εγκατάσταση Yaourt
+	Το πρόγραμμα αυτό μας επιτρέπει να βάζουμε πακέτα λογισμικού από το AUR του Arch Linux
+	$ nano /etc/pacman.conf
+	και προσθέτουμε στο τέλος:
+	[archlinuxfr]
+	SigLevel = Optional TrustAll
+	Server = http://repo.archlinux.fr/$arch
+
+	Κάνουμε update τα πακέτα:
+	$ sudo pacman -Syy
+
+	Και βάζουμε το yaourt:
+	$ sudo pacman -S yaourt
+
+7.Εγκατάσταση γραμματοσειρών
+  Τα πακέτα είναι: font-bh-ttf ttf-dejavu ttf-bitstream-vera ttf-freefont ttf-gentium-basic ttf-inconsolata ttf-liberation ttf-linux-libertine ttf-mgopen ttf-ms-fonts ttf-monaco ttf-opensans ttf-qurancomplex-fonts ttf-ubuntu-font-family ttf-vista-fonts
+
+  Σημείωση: Κάποια πρέπει να μπουν με pacman και κάποια με yaourt.
+  Κάνουμε rebuild την cache με:
+	$ sudo fc-cache -fv
+
+8.Eγκατάσταση Low-Level Power Utilities
+	$ sudo pacman -S acpid pm-utils
+  Επίσης, υπάρχει και το laptop-mode-tools που κάνει πάνω-κάτω την ίδια δουλειά
+
+  Σημείωση: Το acpid για να ξεκινά κατά το boot πρέπει να γράψουμε:
+	    sudo systemctl enable acpid
+
+  Επιπλέον βάζουμε και το bash-completion:
+	$ sudo pacman -S bash-completion
+
+9.Εγκατάσταση Window Manager
+  Θα βάλουμε το awesome-wm μαζί διάφορα άλλα πακέτα
+	$ sudo pacman -S awesome xbindkeys volumeicon networkmanager dnsmasq gnome-keyring network-manager-applet cbatticon slim slim-themes archlinux-themes-slim xorg-xbacklight compton nautilus gnome-themes-standard gnome-icon-theme cheese
+	$ yaourt -S gxkb
+
+	Ρυθμίσεις των παραπάνω προγραμμάτων:
+	
+	xbindkeys:
+	$ nano ~/.xbindkeysrc
+	και βάζουμε:
+	"slimlock"
+	    XF86ScreenSaver
+
+	"xset dpms force off && synclient TouchpadOff=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
+	    XF86Launch1
+
+	"cheese"
+	    XF86WebCam
+
+	"amixer sset Master toggle"
+	    XF86AudioMute
+
+	"amixer set Capture toggle"
+	    XF86AudioMicMute
+
+	"A=`printf %.0f $(xbacklight -get)`; A=$(( $A - 7 )); A=$(($A<0?0:$A));notify-send -t 500 "Brightness is $A%""
+	    XF86MonBrightnessDown
+
+	"A=`printf %.0f $(xbacklight -get)`; A=$(( $A + 7 )); A=$(($A>100?100:$A));notify-send -t 500 "Brightness is $A%""
+	    XF86MonBrightnessUp
+
+	Ρύθμιση του .xinitrc:
+	$ nano ~/.xinitrc
+	και βάζουμε:
+
+	gxkb &
+	volumeicon &
+	nm-applet &
+	cbatticon -l 30 -r 20 -c "systemctl suspend" &
+	compton -b --backend glx --paint-on-overlay --vsync opengl-swc 
+	exec dbus-launch --exit-with-session --sh-syntax awesome
+
+	Σχόλιο: Το xbindkeys το ξεκινάμε μετά την εκκίνηση του awesome, για να αλλάξει αυτό τελευταία τις ρυθμίσεις των keystrokes
+	Σημείωση: Σήμφωνα με το άρθρο (https://wiki.archlinux.org/index.php/Allow_users_to_shutdown), αν κάνουμε login μέσω systemd, μπορούμε να τρέξουμε τις εντολές systemctl χωρίς root δικαιώματα.
+
+	Ρύθμιση του volumeicon:
+	nano ~/.config/volumeicon/volumeicon
+	και το αλλάζουμε ώστε να είναι ως εξής:
+
+	[Alsa]
+	card=default
+
+	[Notification]
+	show_notification=true
+	notification_type=0
+
+	[StatusIcon]
+	stepsize=5
+	onclick=xterm -e 'alsamixer'
+	theme=Default
+	use_panel_specific_icons=false
+	lmb_slider=false
+	mmb_mute=false
+	use_horizontal_slider=false
+	show_sound_level=true
+	use_transparent_background=true
+
+	[Hotkeys]
+	up_enabled=true
+	down_enabled=true
+	mute_enabled=false
+	up=XF86AudioRaiseVolume
+	down=XF86AudioLowerVolume
+	mute=XF86AudioMute
+
+	Ρύθμιση του gxkb:
+	nano ~/.config/gxkb/gxkb.cfg
+	και γράφουμε μέσα:
+
+	[xkb config]
+	group_policy=2
+	default_group=0
+	never_modify_config=false
+	model=pc105
+	layouts=us,gr
+	variants=,
+	toggle_option=grp:alt_shift_toggle,grp_led:scroll,terminate:ctrl_alt_bksp
+	compose_key_position=
+
+	Ρύθμιση του Xresources:
+	$ nano ~/.Xresources
+	και γράφουμε μέσα:
+
+	Xft.antialias: 1
+	Xft.autohint: 0
+	Xft.dpi: 96
+	Xft.hinting: 1
+	Xft.hintstyle: hintslight
+	Xft.lcdfilter: lcddefault
+	Xft.rgba: rgb
+
+	Ρύθμιση του SLiM:
+	$ sudo nano /etc/slim.conf
+	και κάνουμε τις εξής αλλαγές:
+
+	...
+	current_theme       archlinux
+	...
+
+	και
+
+	...
+	default_user        saggy00
+	...
+
+	Σχόλιο: Με αυτή την απλή ρύθμιση, δε μπορούμε να έχουμε πολλαπλούς Window Managers.
+		Στην περίπτωση πολλαπλών WMs το SLiM περνά ως όρισμα $1 κατά την εκτέλεση του αρχείου .xinitrc το όνομα του WM. 
+		Για αναλυτικές οδηγίες: http://www.archlinuxuser.com/2013/02/how-to-install-configure-slim-login.html
+
+	Τέλος δεν ξεχνάμε να ενεργοποιήσουμε το systemd service:
+	$ sudo systemctl enable slim
+
+	Ρυθμίσεις του awesome:
+	$ cp -r /etc/xdg/awesome ~/.config
+	$ chown saggy00:users -R ~/.config/awesome
+	$ nano ~/.config/awesome/rc.lua
+	και προσθέτουμε τη γραμμή:
+	os.execute("xbindkeys")
+
+	Ρυθμίσεις του NetworkManager:
+	Σταματάμε το dhcpd service:
+	$ sudo systemctl stop dhcpcd.service (το εκτελούμε μια φορά)
+	$ sudo systemctl disable dhcpcd.service (το εκτελούμε μια φορά)
+	
+	και εγγράφουμε το network manager service:
+	$ sudo systemctl start NetworkManager (το εκτελούμε μια φορά)
+	$ sudo systemctl enable NetworkManager (το εκτελούμε μια φορά)
+	
+
+10.Εφαρμογή GTK theme στο Awesome-WM
+	$ mkdir ~/.config/gtk-3.0
+	$ nano ~/.congig/gtk-3.0/settings.ini
+	και γράφουμε:
+	[Settings]
+	gtk-icon-theme-name = Adwaita
+	gtk-theme-name = Adwaita
+	gtk-font-name = "Sans 9"
+	gtk-toolbar-style = GTK_TOOLBAR_TEXT
+	gtk-toolbar-icon-size = GTK_ICON_SIZE_BUTTON
+	gtk-button-images = 0
+	gtk-menu-images = 1
+	gtk-enable-event-sounds = 1
+	gtk-enable-input-feedback-sounds = 1
+	gtk-xft-antialias = 1
+	gtk-xft-hinting = 1
+	gtk-xft-hintstyle = hintslight
+	gtk-xft-rgba = rgb
+
+	$ nano ~/.gtkrc-2.0
+	και γράφουμε:
+	include '/home/saggy00/.gtkrc.mine'
+
+	$ cp ~/.gtkrc-2.0 ~/.gtkrc-1.2-gnome2
+	$ nano .gtkrc.mine
+	και γράφουμε:
+
+	include "/usr/share/themes/Adwaita/gtk-2.0/gtkrc"
+	style "schrift"
+	{
+	font_name = "Myriad Web 9"
+	}
+	widget_class "*" style "schrift"
+	gtk-font-name = "Sans 9"
+	gtk-icon-theme-name = "Adwaita"
+	gtk-toolbar-style   = GTK_TOOLBAR_ICONS
+
+11.Διόρθωση του awesome για non-us layout click events
+	$ sudo nano /usr/share/X11/xkb/compat/basic
+	και βάζουμε σχόλια (με //) στα ακόλουθα:
+	group 2 = AltGr;
+	group 3 = AltGr;
+	group 4 = AltGr;
+
+12.Αποτροπή suspend όταν κλείνουμε το lid
+	$ sudo nano /etc/systemd/logind.conf
+	και ενεργοποιούμε την ενέργεια HandleLidSwitch ως εξής:
+	HandleLidSwitch=ignore
+
+13.Βελτίωση του Font Rendering
+  Θα εγκαταστήσουμε το rendering που κάνουν τα ubuntu:
+	$ yaourt -S freetype2-ubuntu fontconfig-ubuntu cairo-ubuntu
+	$ cd /etc/fonts/conf.d
+	$ sudo ln -s ../conf.avail/11-lcdfilter-default.conf
+	$ mkdir -p /home/saggy00/.config/fontconfig/
+	$ nano /home/saggy00/.config/fontconfig/fonts.conf
+	και γράφουμε:
+
+	<?xml version='1.0'?>
+	<!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
+	<fontconfig>
+	  <match target="font" >
+	    <edit mode="assign" name="hintstyle"> <const>hintslight</const></edit>
+	    <edit mode="assign" name="antialias"> <bool>true</bool></edit>
+	    <edit mode="assign" name="rgba">      <const>rgb</const></edit>
+	  </match>
+	</fontconfig>
+
+14.Διόρθωση του screen tearing
+  Εφόσον έχουμε εγκαταστήσει το compton (που είναι ένας compositor για τον X Server), και βάσει της γραμμής
+  compton -b --backend glx --paint-on-overlay --vsync opengl-swc του αρχείου .xinitrc, δεν θα έχουμε θέματα όσον αφορά το tearing. Σε περίπτωση, όμως, που το πρόβλημα παραμένει, πρέπει να βάλουμε tearing και στην κάρτα intel. Συγκεκριμένα:
+	$ sudo nano /etc/X11/xorg.conf.d/20-intel.conf
+	και γράφουμε:
+	
+	Section "Device"
+	   Identifier  "Intel Graphics"
+	   Driver      "intel"
+	   Option      "TearFree"    "true"
+	EndSection
+
+15.Εγκατάσταση του thinkfan
+	$ yaourt -S thinkfan
+	$ sudo nano /etc/modprobe.d/thinkfan.conf
+	και γράφουμε:
+	options thinkpad_acpi fan_control=1
+	
+	Έτσι επιτρέπουμε στο kernel να ελέγξει τις στροφές (αρχείο /proc/acpi/ibm/fan)
+	Τέλος ενεργοποιούμε τον daemon
+	$ sudo systemctl enable thinkfan
+
+	Δημιουργούμε το αρχείο των ρυθμίσεων για να ελέγχουμε εμείς τις στροφές του fan
+	$ sudo nano /etc/thinkfan.conf
+	και γράφουμε:
+	######################################################################
+	# thinkfan 0.7 example config file
+	# ================================
+	#
+	# ATTENTION: There is only very basic sanity checking on the configuration.
+	# That means you can set your temperature limits as insane as you like. You
+	# can do anything stupid, e.g. turn off your fan when your CPU reaches 70°C.
+	#
+	# That's why this program is called THINKfan: You gotta think for yourself.
+	#
+	######################################################################
+	#
+	# IBM/Lenovo Thinkpads (thinkpad_acpi, /proc/acpi/ibm)
+	# ====================================================
+	#
+	# IMPORTANT:
+	#
+	# To keep your HD from overheating, you have to specify a correction value for
+	# the sensor that has the HD's temperature. You need to do this because
+	# thinkfan uses only the highest temperature it can find in the system, and
+	# that'll most likely never be your HD, as most HDs are already out of spec
+	# when they reach 55 °C.
+	# Correction values are applied from left to right in the same order as the
+	# temperatures are read from the file.
+	#
+	# For example:
+	# tp_thermal /proc/acpi/ibm/thermal (0, 0, 10)
+	# will add a fixed value of 10 °C the 3rd value read from that file. Check out
+	# http://www.thinkwiki.org/wiki/Thermal_Sensors to find out how much you may
+	# want to add to certain temperatures.
+
+	#  Syntax:
+	#  (LEVEL, LOW, HIGH)
+	#  LEVEL is the fan level to use (0-7 with thinkpad_acpi)
+	#  LOW is the temperature at which to step down to the previous level
+	#  HIGH is the temperature at which to step up to the next level
+	#  All numbers are integers.
+	#
+
+	# I use this on my T61p:
+	tp_fan /proc/acpi/ibm/fan
+	hwmon /sys/devices/virtual/hwmon/hwmon0/temp1_input
+	hwmon /sys/devices/platform/coretemp.0/hwmon/hwmon2/temp3_input
+	hwmon /sys/devices/platform/coretemp.0/hwmon/hwmon2/temp1_input
+	hwmon /sys/devices/platform/coretemp.0/hwmon/hwmon2/temp2_input
+
+
+	(0,	0,	50)
+	(1,	43,	55)
+	(2,	45,	56)
+	(3,	47,	58)
+	(4,	51,	60)
+	(5,	54,	61)
+	(7,	58,	32767)
+
+	Σχόλιο: Τις συσκευές hwmon τις βρήκαμε μέσω της εντολής
+	$ sudo find /sys/ -name temp*_input
+
+	Για να παρακολουθούμε τους sensors του υπολογιστή βάζουμε το lm-sensors
+	$ sudo pacman -S lm_sensors
+
+	Μετά την εγκατάσταση γράφουμε:
+	$ sudo sensors-detect
+	και πατάμε συνεχώς Enter για τις dafault επιλογές
+
+	Τελικά, βλέπουμε τις ενδείξεις με την εντολή:
+	$ sensors
+
+
+16.Εγκατάσταση Blueman
+	$ sudo pacman -S blueman
+
+	$ sudo systemctl start bluetooth.service
+	$ sudo systemctl enable bluetooth.service
+
+	Προσθήκη του χρήστη saggy00 στο group lp:
+	$ sudo useradd -G lp saggy00
+	Για να ξεκινήσουμε το applet, αρκεί να ξεκινήσουμε το:
+	$ blueman-applet
+
+17.Εγκατάσταση εφαρμογών
+	Codecs:
+	$ sudo pacman -S gstreamer0.10-plugins gstreamer0.10-ffmpeg ffmpeg flashplugin
+
+	LibreOffice:
+	Σίγουρη έκδοση: $ sudo pacman -S libreoffice-still libreoffice-still-sdk libreoffice-still-el jdk7-openjdk jre7-openjdk 
+	Νεότερη έκδοση: $ sudo pacman -S libreoffice-fresh libreoffice-fresh-sdk libreoffice-fresh-el jdk7-openjdk jre7-openjdk 
+
+	Διάφορα άλλα:
+	$ sudo pacman -S file-roller v4l-utils x264 cups transmission-gtk gimp filezilla firefox firefox-i18n-el meld gtranslator unzip htop lsof powertop testdisk evince xchm
+
+	$ yaourt -S skype teamviewer dropbox nautilus-dropbox --noconfirm
+
+	Σημείωση: για εκτέλεση του teamviewer πρέπει να ξεκινήσουμε τον daemon: systemctl start teamviewerd
+
+
+18.Misc
+
+* Αλλαγή του audio source όταν έχουμε DisplayPort και αντίστροφα:
+	$ pactl set-card-profile alsa_card.pci-0000_00_1b.0 output:hdmi-stereo+input:analog-stereo
+	$ pactl set-card-profile alsa_card.pci-0000_00_1b.0 output:analog-stereo+input:analog-stereo
+
+* Βελτιωμένη έκδοση .xinitrc:
+	$ sudo pacman -S parcellite
+
+	$ nano .xinitrc
+	# This script is executed by SLiM upon login.
+	# To be precise, bash executes this script, so use anything
+	# that is allowed by bash
+
+	# Load the .Xresources file (SLiM does not load it)
+	xrdb -load ~/.Xresources
+
+	# Show system tray icons and related daemons
+	./.systray.sh &
+
+	# Start the compositor for the X11 to fix tearing issues
+	compton -b --backend glx --paint-on-overlay --vsync opengl-swc 
+
+	# Start the windows manager with auto usb detection for gvfs
+	exec dbus-launch --exit-with-session --sh-syntax awesome
+
+	Και:
+	$ nano .systray.sh
+	#!/bin/bash
+
+	# Always start with Touchpad Off
+	ID=`xinput list | grep -Eo 'TouchPad\s*id\=[0-9]{1,2}' | grep -Eo '[0-9]{1,2}'`
+	xinput disable $ID > /dev/null 2>&1 &
+
+	# Start the clipboard manager (store clipboard even if window is closed)
+	parcellite -n > /dev/null 2>&1 &
+
+	# 1 sec sleep time is enough to ensure specific order of system tray icons
+
+	# Show an icon when caps lock is on. Change settings though GSettings:
+	# i.e. gsettings get apps.indicators.keylock <press tab for options>
+	indicator-keylock > /dev/null 2>&1 &
+	sleep 1
+
+	# Netwok Manager icon
+	nm-applet > /dev/null 2>&1 &
+	sleep 1
+
+	# Volume icon
+	volumeicon > /dev/null 2>&1 &
+	sleep 1
+
+	# Battery icon. Show notification when battery is at 30% and suspend at 20%
+	cbatticon -l 30 -r 20 -c "systemctl suspend" > /dev/null 2>&1 &
+	sleep 1
+
+	# Keyboard language layout (per window)
+	gxkb > /dev/null 2>&1 &
+
+* Ρύθμιση του urxvt:
+	$ sudo pacman -S xsel rxvt-unicode
+	
+	$ nano .Xresources
+	!!!!!!!!!!!!!! DPI Setting !!!!!!!!!!!!!!!!
+	Xft.antialias: 1
+	Xft.autohint: 0
+	Xft.dpi: 96
+	Xft.hinting: 1
+	Xft.hintstyle: hintslight
+	Xft.lcdfilter: lcddefault
+	Xft.rgba: rgb
+
+	!!!!!!!!!!!!!! URxvt !!!!!!!!!!!!!!!!
+	! General
+	urxvt*loginShell:         true
+	urxvt*scrollBar:         false
+	urxvt*secondaryScroll:    true
+	urxvt*saveLines:         65535
+	urxvt*cursorBlink:       false
+	urxvt*urgentOnBell:       true
+	 
+	! Extensions
+	urxvt*perl-lib:        /usr/lib/urxvt/perl/
+	urxvt*perl-ext-common: default,matcher,searchable-scrollback,clipboard,font-size
+	urxvt*urlLauncher:     /usr/bin/firefox
+	urxvt*matcher.button:  1
+	!  - catch ugly URLs
+	urxvt.cutchars:        "()'*<>[]{|}"
+
+
+	urxvt.clipboard.copycmd: xsel -ib
+	urxvt.clipboard.pastecmd: xsel -ob
+
+
+	! Appearance
+	!  - use a bitmap font
+	urxvt*font: xft:Monospace:pixelsize=12
+	!  - cursor
+	urxvt*cursorColor: #DCDCCC
+
+	urxvt.depth: 32
+
+	urxvt.background: rgba:0000/0000/0000/dddd
+	urxvt.foreground: grey80
+	urxvt.tintColor: #262626
+	urxvt.borderColor: rgba:0000/0000/0000/dddd
+
+	! These two lines cause VLC to have strange color	 
+	!*foreground:     rgba:0000/0000/0000/dddd
+	!*background:     rgb:10/10/10
+
+	!black
+	*color0:         rgb:20/20/20
+	*color8:         rgb:75/77/73
+	!!red
+	*color1:         rgb:cc/00/00
+	*color9:         rgb:ef/29/29
+	!!green
+	*color2:         rgb:4e/9a/06
+	*color10:        rgb:8a/e2/34
+	!!brown/yellow
+	*color3:         rgb:c4/a0/00
+	*color11:        rgb:fc/e9/4f
+	!!blue
+	*color4:         rgb:34/65/a4
+	*color12:        rgb:72/9f/cf
+	!!magenta
+	*color5:         rgb:75/50/7b
+	*color13:        rgb:ad/7f/a8
+	!!cyan
+	*color6:         rgb:06/98/9a
+	*color14:        rgb:34/e2/e2
+	!!white
+	*color7:         rgb:d3/d7/cf
+	*color15:        rgb:ee/ee/ec
+
+	! Copy/Paste from/to clipboard
+	urxvt.keysym.Shift-Control-C: perl:clipboard:copy
+	urxvt.keysym.Shift-Control-V: perl:clipboard:paste
+	urxvt.iso14755: False
+
+	! Zoom in/out with Ctrl (+ Shift) and Arrow up/down
+	urxvt.keysym.C-Up:     perl:font-size:increase
+	urxvt.keysym.C-Down:   perl:font-size:decrease
+	urxvt.keysym.C-S-Up:   perl:font-size:incglobal
+	urxvt.keysym.C-S-Down: perl:font-size:decglobal
+
+	!!!!!!!!!!!!!! XTerm !!!!!!!!!!!!!!!!
+	! Allow Alt key in bash (e.g. Alt+f moves a word forward)
+	XTerm*metaSendsEscape: true
+	
+	$ sudo nano /usr/lib/urxvt/perl/clipboard
+	#! perl -w
+	# Author:   Bert Muennich
+	# Website:  http://www.github.com/muennich/urxvt-perls
+	# License:  GPLv2
+
+	# Use keyboard shortcuts to copy the selection to the clipboard and to paste
+	# the clipboard contents (optionally escaping all special characters).
+	# Requires xsel to be installed!
+
+	# Usage: put the following lines in your .Xdefaults/.Xresources:
+	#   URxvt.perl-ext-common: ...,clipboard
+	#   URxvt.keysym.M-c:   perl:clipboard:copy
+	#   URxvt.keysym.M-v:   perl:clipboard:paste
+	#   URxvt.keysym.M-C-v: perl:clipboard:paste_escaped
+
+	# Options:
+	#   URxvt.clipboard.autocopy: If true, PRIMARY overwrites clipboard
+
+	# You can also overwrite the system commands to use for copying/pasting.
+	# The default ones are:
+	#   URxvt.clipboard.copycmd:  xsel -ib
+	#   URxvt.clipboard.pastecmd: xsel -ob
+	# If you prefer xclip, then put these lines in your .Xdefaults/.Xresources:
+	#   URxvt.clipboard.copycmd:  xclip -i -selection clipboard
+	#   URxvt.clipboard.pastecmd: xclip -o -selection clipboard
+	# On Mac OS X, put these lines in your .Xdefaults/.Xresources:
+	#   URxvt.clipboard.copycmd:  pbcopy
+	#   URxvt.clipboard.pastecmd: pbpaste
+
+	# The use of the functions should be self-explanatory!
+
+	use strict;
+
+	sub on_start {
+		my ($self) = @_;
+
+		$self->{copy_cmd} = $self->x_resource('clipboard.copycmd') || 'xsel -ib';
+		$self->{paste_cmd} = $self->x_resource('clipboard.pastecmd') || 'xsel -ob';
+
+		if ($self->x_resource('clipboard.autocopy') eq 'true') {
+			$self->enable(sel_grab => \&sel_grab);
+		}
+
+		()
+	}
+
+	sub copy {
+		my ($self) = @_;
+
+		if (open(CLIPBOARD, "| $self->{copy_cmd}")) {
+			my $sel = $self->selection();
+			utf8::encode($sel);
+			print CLIPBOARD $sel;
+			close(CLIPBOARD);
+		} else {
+			print STDERR "error running '$self->{copy_cmd}': $!\n";
+		}
+
+		()
+	}
+
+	sub paste {
+		my ($self) = @_;
+
+		my $str = `$self->{paste_cmd}`;
+		if ($? == 0) {
+			$self->tt_paste($str);
+		} else {
+			print STDERR "error running '$self->{paste_cmd}': $!\n";
+		}
+
+		()
+	}
+
+	sub paste_escaped {
+		my ($self) = @_;
+
+		my $str = `$self->{paste_cmd}`;
+		if ($? == 0) {
+			$str =~ s/([!#\$%&\*\(\) ='"\\\|\[\]`~,<>\?])/\\\1/g;
+			$self->tt_paste($str);
+		} else {
+			print STDERR "error running '$self->{paste_cmd}': $!\n";
+		}
+
+		()
+	}
+
+	sub on_user_command {
+		my ($self, $cmd) = @_;
+
+		if ($cmd eq "clipboard:copy") {
+		   $self->copy;
+		} elsif ($cmd eq "clipboard:paste") {
+		   $self->paste;
+		} elsif ($cmd eq "clipboard:paste_escaped") {
+		   $self->paste_escaped;
+		}
+
+		()
+	}
+
+	sub sel_grab {
+		my ($self) = @_;
+
+		$self->copy;
+
+		()
+	}
+
+	$ sudo nano /usr/lib/urxvt/perl/font-size 	
+	#!/usr/bin/perl
+	#
+	# On-the-fly adjusting of the font size in urxvt
+	#
+	# Copyright (c) 2008 David O'Neill
+	#               2012 Noah K. Tilton <noahktilton@gmail.com>
+	#               2012-2013 Jan Larres <jan@majutsushi.net>
+	#
+	# Permission is hereby granted, free of charge, to any person obtaining a copy
+	# of this software and associated documentation files (the "Software"), to
+	# deal in the Software without restriction, including without limitation the
+	# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+	# sell copies of the Software, and to permit persons to whom the Software is
+	# furnished to do so, subject to the following conditions:
+	#
+	# The above copyright notice and this permission notice shall be included in
+	# all copies or substantial portions of the Software.
+	#
+	# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+	# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+	# IN THE SOFTWARE.
+	#
+	# URL: https://github.com/majutsushi/urxvt-font-size
+	#
+	# Based on:
+	# https://github.com/dave0/urxvt-font-size
+	# https://github.com/noah/urxvt-font
+	#
+	#
+	# USAGE
+	#
+	# Put the font-size script into $HOME/.urxvt/ext/ and add it to the list of
+	# enabled perl-extensions in ~/.Xresources:
+	#   URxvt.perl-ext-common: ...,font-size
+	#
+	# Add some keybindings:
+	#   URxvt.keysym.C-Up:     perl:font-size:increase
+	#   URxvt.keysym.C-Down:   perl:font-size:decrease
+	#   URxvt.keysym.C-S-Up:   perl:font-size:incglobal
+	#   URxvt.keysym.C-S-Down: perl:font-size:decglobal
+	#
+	# Supported functions:
+	# - increase/decrease:
+	#       increase or decrease the font size of the current terminal.
+	# - incglobal/decglobal:
+	#       same as above and also adjust the X server values so all newly started
+	#       terminals will use the same fontsize.
+	# - incsave/decsave:
+	#       same as incglobal/decglobal and also modify the ~/.Xresources file so
+	#       the changed font sizes will persist over a restart of the X server or
+	#       a reboot.
+	#
+	# You can also change the step size that the script will use to increase the
+	# font size:
+	#
+	#   URxvt.font-size.step: 4
+	#
+	# The default step size is 1. This means that with this setting a size change
+	# sequence would be for example 8->12->16->20 instead of 8->9->10->11->12 etc.
+	# Please note that many X11 fonts are only available in specific sizes, though,
+	# and odd sizes are often not available, resulting in an effective step size of
+	# 2 instead of 1 in that case.
+
+
+	use strict;
+	use warnings;
+
+	my %escapecodes = (
+	    "font"           => 710,
+	    "boldFont"       => 711,
+	    "italicFont"     => 712,
+	    "boldItalicFont" => 713
+	);
+
+	sub on_start
+	{
+	    my ($self) = @_;
+
+	    $self->{step} = $self->x_resource("%.step") || 1;
+
+	    foreach my $type (qw(font boldFont italicFont boldItalicFont)) {
+		$self->{$type} = $self->x_resource($type) || "undef";
+	    }
+	}
+
+	sub on_user_command
+	{
+	    my ($self, $cmd) = @_;
+
+	    my $step = $self->{step};
+
+	    if ($cmd eq "font-size:increase") {
+		fonts_change_size($self,  $step, 0);
+	    } elsif ($cmd eq "font-size:decrease") {
+		fonts_change_size($self, -$step, 0);
+	    } elsif ($cmd eq "font-size:incglobal") {
+		fonts_change_size($self,  $step, 1);
+	    } elsif ($cmd eq "font-size:decglobal") {
+		fonts_change_size($self, -$step, 1);
+	    } elsif ($cmd eq "font-size:incsave") {
+		fonts_change_size($self,  $step, 2);
+	    } elsif ($cmd eq "font-size:decsave") {
+		fonts_change_size($self, -$step, 2);
+	    } elsif ($cmd eq "font-size:reset") {
+		fonts_reset($self);
+	    }
+	}
+
+	sub fonts_change_size
+	{
+	    my ($term, $change, $save) = @_;
+
+	    my @newfonts = ();
+
+	    my $curres = $term->resource('font');
+	    if (!$curres) {
+		$term->scr_add_lines("\r\nWarning: No font configured, trying a default.\r\nPlease set a font with the 'URxvt.font' resource.");
+		$curres = "fixed";
+	    }
+	    my @curfonts = split(/\s*,\s*/, $curres);
+
+	    my $basefont = shift(@curfonts);
+	    my ($newbasefont, $newbasesize) = handle_font($term, $basefont, $change, 0);
+	    push @newfonts, $newbasefont;
+
+	    # Only adjust other fonts if base font changed
+	    if ($newbasefont ne $basefont) {
+		foreach my $font (@curfonts) {
+		    my ($newfont, $newsize) = handle_font($term, $font, $change, $newbasesize);
+		    push @newfonts, $newfont;
+		}
+		my $newres = join(",", @newfonts);
+		font_apply_new($term, $newres, "font", $save);
+
+		handle_type($term, "boldFont",       $change, $newbasesize, $save);
+		handle_type($term, "italicFont",     $change, $newbasesize, $save);
+		handle_type($term, "boldItalicFont", $change, $newbasesize, $save);
+	    }
+
+	    if ($save > 1) {
+		# write the new values back to the file
+		my $xresources = readlink $ENV{"HOME"} . "/.Xresources";
+		system("xrdb -edit " . $xresources);
+	    }
+	}
+
+	sub fonts_reset
+	{
+	    my ($term) = @_;
+
+	    foreach my $type (qw(font boldFont italicFont boldItalicFont)) {
+		my $initial = $term->{$type};
+		if ($initial ne "undef") {
+		    font_apply_new($term, $initial, $type, 0);
+		}
+	    }
+	}
+
+	sub handle_type
+	{
+	    my ($term, $type, $change, $basesize, $save) = @_;
+
+	    my $curres = $term->resource($type);
+	    if (!$curres) {
+		return;
+	    }
+	    my @curfonts = split(/\s*,\s*/, $curres);
+	    my @newfonts = ();
+
+	    foreach my $font (@curfonts) {
+		my ($newfont, $newsize) = handle_font($term, $font, $change, $basesize);
+		push @newfonts, $newfont;
+	    }
+
+	    my $newres = join(",", @newfonts);
+	    font_apply_new($term, $newres, $type, $save);
+	}
+
+	sub handle_font
+	{
+	    my ($term, $font, $change, $basesize) = @_;
+
+	    my $newfont;
+	    my $newsize;
+	    my $prefix = 0;
+
+	    if ($font =~ /^\s*x:/) {
+		$font =~ s/^\s*x://;
+		$prefix = 1;
+	    }
+	    if ($font =~ /^\s*(\[.*\])?xft:/) {
+		($newfont, $newsize) = font_change_size_xft($term, $font, $change, $basesize);
+	    } elsif ($font =~ /^\s*-/) {
+		($newfont, $newsize) = font_change_size_xlfd($term, $font, $change, $basesize);
+	    } else {
+		# check whether the font is a valid alias and if yes resolve it to the
+		# actual font
+		my $lsfinfo = `xlsfonts -l $font 2>/dev/null`;
+
+		if ($lsfinfo eq "") {
+		    # not a valid alias, ring the bell if it is the base font and just
+		    # return the current font
+		    if ($basesize == 0) {
+		        $term->scr_bell;
+		    }
+		    return ($font, $basesize);
+		}
+
+		my $fontinfo = (split(/\n/, $lsfinfo))[-1];
+		my ($fontfull) = ($fontinfo =~ /\s+([-a-z0-9]+$)/);
+		($newfont, $newsize) = font_change_size_xlfd($term, $fontfull, $change, $basesize);
+	    }
+
+	    # $term->scr_add_lines("\r\nNew font is $newfont\n");
+	    if ($prefix) {
+		$newfont = "x:$newfont";
+	    }
+	    return ($newfont, $newsize);
+	}
+
+	sub font_change_size_xft
+	{
+	    my ($term, $fontstring, $change, $basesize) = @_;
+
+	    my @pieces   = split(/:/, $fontstring);
+	    my @resized  = ();
+	    my $size     = 0;
+	    my $new_size = 0;
+
+	    foreach my $piece (@pieces) {
+		if ($piece =~ /^(?:(?:pixel)?size=|[^=-]+-)(\d+(\.\d*)?)$/) {
+		    $size = $1;
+
+		    if ($basesize != 0) {
+		        $new_size = $basesize;
+		    } else {
+		        $new_size = $size + $change
+		    }
+
+		    $piece =~ s/(=|-)$size/$1$new_size/;
+		}
+		push @resized, $piece;
+	    }
+
+	    my $resized_str = join(":", @resized);
+
+	    # don't make fonts too small
+	    if ($new_size >= 6) {
+		return ($resized_str, $new_size);
+	    } else {
+		if ($basesize == 0) {
+		    $term->scr_bell;
+		}
+		return ($fontstring, $size);
+	    }
+	}
+
+	sub font_change_size_xlfd
+	{
+	    my ($term, $fontstring, $change, $basesize) = @_;
+
+	    #-xos4-terminus-medium-r-normal-*-12-*-*-*-*-*-*-1
+
+	    my @fields = qw(foundry family weight slant setwidth style pixelSize pointSize Xresolution Yresolution spacing averageWidth registry encoding);
+
+	    my %font;
+	    $fontstring =~ s/^-//;  # Strip leading - before split
+	    @font{@fields} = split(/-/, $fontstring);
+
+	    if ($font{pixelSize} eq '*') {
+		$term->scr_add_lines("\r\nWarning: Font size undefined, assuming 12.\r\nPlease set the 'URxvt.font' resource to a font with a concrete size.");
+		$font{pixelSize} = '12'
+	    }
+	    if ($font{registry} eq '*') {
+		$font{registry} ='iso8859';
+	    }
+
+	    # Blank out the size for the pattern
+	    my %pattern = %font;
+	    $pattern{foundry} = '*';
+	    $pattern{setwidth} = '*';
+	    $pattern{pixelSize} = '*';
+	    $pattern{pointSize} = '*';
+	    # if ($basesize != 0) {
+	    #     $pattern{Xresolution} = '*';
+	    #     $pattern{Yresolution} = '*';
+	    # }
+	    $pattern{averageWidth} = '*';
+	    # make sure there are no empty fields
+	    foreach my $field (@fields) {
+		$pattern{$field} = '*' unless defined($pattern{$field});
+	    }
+	    my $new_fontstring = '-' . join('-', @pattern{@fields});
+
+	    my @possible;
+	    # $term->scr_add_lines("\r\nPattern is $new_fontstring\n");
+	    open(FOO, "xlsfonts -fn '$new_fontstring' | sort -u |") or die $!;
+	    while (<FOO>) {
+		chomp;
+		s/^-//;  # Strip leading '-' before split
+		my @fontdata = split(/-/, $_);
+
+		push @possible, [$fontdata[6], "-$_"];
+		# $term->scr_add_lines("\r\npossibly $fontdata[6] $_\n");
+	    }
+	    close(FOO);
+
+	    if (!@possible) {
+		die "No possible fonts!";
+	    }
+
+	    if ($basesize != 0) {
+		# sort by font size, descending
+		@possible = sort {$b->[0] <=> $a->[0]} @possible;
+
+		# font is not the base font, so find the largest font that is at most
+		# as large as the base font. If the largest possible font is smaller
+		# than the base font bail and hope that a 0-size font can be found at
+		# the end of the function
+		if ($possible[0]->[0] > $basesize) {
+		    foreach my $candidate (@possible) {
+		        if ($candidate->[0] <= $basesize) {
+		            return ($candidate->[1], $candidate->[0]);
+		        }
+		    }
+		}
+	    } elsif ($change > 0) {
+		# sort by font size, ascending
+		@possible = sort {$a->[0] <=> $b->[0]} @possible;
+
+		foreach my $candidate (@possible) {
+		    if ($candidate->[0] >= $font{pixelSize} + $change) {
+		        return ($candidate->[1], $candidate->[0]);
+		    }
+		}
+	    } elsif ($change < 0) {
+		# sort by font size, descending
+		@possible = sort {$b->[0] <=> $a->[0]} @possible;
+
+		foreach my $candidate (@possible) {
+		    if ($candidate->[0] <= $font{pixelSize} + $change && $candidate->[0] != 0) {
+		        return ($candidate->[1], $candidate->[0]);
+		    }
+		}
+	    }
+
+	    # no fitting font available, check whether a 0-size font can be used to
+	    # fit the size of the base font
+	    @possible = sort {$a->[0] <=> $b->[0]} @possible;
+	    if ($basesize != 0 && $possible[0]->[0] == 0) {
+		return ($possible[0]->[1], $basesize);
+	    } else {
+		# if there is absolutely no smaller/larger font that can be used
+		# return the current one, and beep if this is the base font
+		if ($basesize == 0) {
+		    $term->scr_bell;
+		}
+		return ("-$fontstring", $font{pixelSize});
+	    }
+	}
+
+	sub font_apply_new
+	{
+	    my ($term, $newfont, $type, $save) = @_;
+
+	    # $term->scr_add_lines("\r\nnew font is $newfont\n");
+
+	    $term->cmd_parse("\033]" . $escapecodes{$type} . ";" . $newfont . "\033\\");
+
+	    # load the xrdb db
+	    # system("xrdb -load " . X_RESOURCES);
+
+	    if ($save > 0) {
+		# merge the new values
+		open(XRDB_MERGE, "| xrdb -merge") || die "can't fork: $!";
+		local $SIG{PIPE} = sub { die "xrdb pipe broken" };
+		print XRDB_MERGE "URxvt." . $type . ": " . $newfont;
+		close(XRDB_MERGE) || die "bad xrdb: $! $?";
+	    }
+	}
+
+* Ρύθμιση του powersave mode όταν είμαστε σε μόνο με μπαταρία:
+	$ sudo pacman -S cpupower powertop
+	Σημείωση: Με το powertop βλέπουμε τι μπορούμε να κάνουμε για να βελτιώσουμε τη διάρκεια της μπαταρίας του υπολογιστή.
+		  Με το cpupower μπορούμε να θέσουμε το εύρος που θα δουλεύει ο επεξεργαστής καθώς επίσης και το mode (powersave ή performance) λειτουργίας του.
+
+	Διορθώνουμε τον acpi daemon ώστε να μεταβαίνουμε από powersave off σε powersave on όταν βγάζουμε το τροφοδοτικό:
+	$ sudo nano /etc/acpi/handler.sh
+	και κάνουμε το case "ac_adapter" ως εξής:
+
+	ac_adapter)
+	case "$2" in
+	    ACPI*|AC|ACAD|ADP0)
+		case "$4" in
+		    00000000)
+		        pm-powersave true
+		        logger 'AC unpluged'
+		        ;;
+		    00000001)
+		        pm-powersave false
+		        logger 'AC pluged'
+		        ;;
+		esac
+		;;
+	    *)
+		logger "ACPI action undefined: $2"
+		;;
+	esac
+	;;
+
+	Προσθέτουμε βελτιώσεις στα pm-utils:
+	
+	$ sudo nano /usr/lib/pm-utils/power.d/device_pm
+	#!/bin/sh
+
+
+	device_pm() {
+
+		for dpcontrol in /sys/bus/{pci,spi,i2c}/devices/*/power/control; do
+
+			[ -w "$dpcontrol" ] || continue
+
+			echo $1 > "$dpcontrol"
+
+		done
+
+	}
+
+
+	case "$1" in
+
+		true)
+
+			echo "**device power management ON"
+
+			device_pm auto
+
+			;;
+
+		false)
+
+			echo "**device power management OFF"
+
+			device_pm on
+
+			;;
+
+	esac
+
+
+	exit 0
+
+	$ sudo nano /usr/lib/pm-utils/power.d/disable_wol
+	#!/bin/sh
+
+	. "${PM_FUNCTIONS}"
+
+	command_exists ethtool || exit $NA
+
+	set_wol_status() {
+	    for d in "/sys/class/net/"*; do
+		[ -e "$d/wireless" ] && continue
+		[ -h "$d/device/driver" ] || continue
+		printf "Setting Wake On Lan for %s to %s..." "${d##*/}" "$1"
+		case $1 in
+		    disable) ethtool -s "${d##*/}" wol d>/dev/null 2>&1;;
+		    enable) ethtool -s "${d##*/}" wol g>/dev/null 2>&1;;
+		esac
+		[ "$?" -eq 0 ] && echo Done. || echo Failed.
+	    done
+	}
+
+	case $1 in
+	    true) set_wol_status disable;;
+	    false) set_wol_status enable;;
+	    *) exit $NA;;
+	esac
+
+	exit 0
+
+	$ sudo nano /usr/lib/pm-utils/power.d/usb_pm
+	#!/bin/sh
+
+	case "$1" in
+black
+		true)
+
+		   # USB powersaving
+
+			for i in /sys/bus/usb/devices/*/power/autosuspend; do
+
+				echo 1 > $i
+
+			done
+
+			for i in /sys/bus/usb/devices/*/power/control; do
+
+				echo auto > $i
+
+			done
+
+		sysctl kernel.nmi_watchdog=0
+
+		;;
+
+		false)
+
+			for i in /sys/bus/usb/devices/*/power/autosuspend; do
+
+				echo 2 > $i
+
+			done
+
+			for i in /sys/bus/usb/devices/*/power/control; do
+
+				echo on > $i
+
+			done
+
+		sysctl kernel.nmi_watchdog=1
+
+		;;
+
+	esac
+
+
+	exit 0
+
+	$ sudo nano /usr/lib/pm-utils/power.d/vmwriteback_pm
+	#!/bin/sh
+
+	case "$1" in
+
+		true)
+
+		   # Less VM disk activity. Suggested by powertop
+
+			echo 1500 > /proc/sys/vm/dirty_writeback_centisecs
+
+		;;
+
+		false)
+
+		   #Return settings to default on AC power
+
+			echo 500 > /proc/sys/vm/dirty_writeback_centisecs
+
+		;;
+
+	esac
+
+
+	exit 0
+
+	Σημείωση: Δίνουμε τα κατάλληλα δικαιώματα στα αρχεία που φτιάχνουμε ώστε να είναι εκτελέσιμα κλπ. Για τα σωστά δικαιώματα βλέπουμε τα ήδη υπάρχοντα αρχεία του καταλόγου.
+
+	Εξαναγκάζουμε να γίνεται έλεγχος αν έχουμε τον AC Adapter εντός κατά το wake up:
+	$ sudo nano /usr/lib/systemd/system/powersave.service
+	[Unit]
+	Description=Set powersave mode during boot or wakeup
+	After=suspend.target
+
+	[Service]
+	Type=oneshot
+
+	# Set to powersave if boot on battery
+	ExecStart=/etc/rc.local.powersave
+
+	[Install]
+	WantedBy=suspend.target basic.target
+
+	$ sudo nano /etc/rc.local.powersave
+	#!/bin/sh
+
+	IS_ONLINE=`cat /sys/class/power_supply/AC/online`
+
+	if [ $IS_ONLINE -eq 1 ]
+	then
+		pm-powersave false
+	else
+		pm-powersave true
+	fi
+
+* Εγκατάσταση Ορισμένων Βοηθητικών Προγραμμάτων
+
+	# Για σύνδεση Android και IOS Device
+	$ sudo pacman -S usbmuxd libplist ifuse gvfs gvfs-mtp gvfs-afc
+
+	# Για αναγνώσιση NTFS σκληρών δίσκων
+	$ sudo pacman -S ntfs-3g
+
+	# Προγράμματα για λειτουργία του script ntuaspot
+	$ sudo pacman -S lynx curl gnupg
+
+	# Πρόγραμμα για Printer Pool
+	$ sudo pacman -S cups
+
+
+
+
+
