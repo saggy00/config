@@ -1,0 +1,32 @@
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    export PATH="$HOME/bin:$PATH"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# set PATH that includes golang
+if [ -d "$HOME/.local/go/bin" ] ; then
+    export PATH="$HOME/.local/go/bin:$PATH"
+fi
+
+# set PATH that includes rust
+if [ -d "$HOME/.cargo/bin" ] ; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# local library paths
+if [ -d "$HOME/.local/lib" ] ; then
+    export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+    export LIBRARY_PATH="$HOME/.local/lib:$LIBRARY_PATH"
+    export LD_RUN_PATH="$HOME/.local/lib:$LD_RUN_PATH"
+fi
+
+# local includes
+if [ -d "$HOME/.local/include" ] ; then
+    export C_INCLUDE_PATH="$HOME/.local/include:$C_INCLUDE_PATH"
+    export CPLUS_INCLUDE_PATH="$HOME/.local/include:$CPLUS_INCLUDE_PATH"
+fi
