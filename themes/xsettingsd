@@ -7,7 +7,7 @@ Xft/RGBA "rgb"
 
 Net/ThemeName "Vertex"
 Gtk/IconThemeName "Vertex-Icons"
-Gtk/FontName "Noto Sans 11"
+Gtk/FontName "Noto Sans 10"
 
 Gtk/MenuImages 1
 
