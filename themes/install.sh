@@ -16,7 +16,7 @@ cp "$DIR"/gtkrc-2.0 ~/.gtkrc-2.0
 cp -r "$DIR"/gtk-3.0 ~/.config
 
 mkdir -p ~/.icons/default
-cp "$DIR"/icons/defaut/theme.index ~/.icons/default
+cp "$DIR"/icons/default/index.theme ~/.icons/default
 
 
 # For more info: https://github.com/derat/xsettingsd/wiki/Settings
