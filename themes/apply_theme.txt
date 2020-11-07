@@ -1,0 +1,10 @@
+After installing the themes, use lxappearence to set the gtk2 config:
+Widget tab -> Vertex
+Color -> nothing
+Icon Theme -> Vertex-Icons
+Mouse Cursor -> Paper
+Font -> Enable antialiasing, Enable hinting, Slight, RGB
+Other -> Text beside icons, Large toolbar icon, untick both about images, tick both about sound, untick accessibility
+
+After saving the theme, the config will be stored in ~/.gtkrc-2.0
+Finally, make sure that the ~/.config/gtk-3.0 configuration is compatible with the ~/.gtkrc-2.0 file
