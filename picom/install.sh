@@ -4,4 +4,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 yay -S picom
 cp "$DIR"/picom.conf ~/.config
-echo "picom -b" > ~/.xsession
+echo "picom -b" >> ~/.xsession

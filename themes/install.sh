@@ -21,4 +21,4 @@ cp "$DIR"/icons/defaut/theme.index ~/.icons/default
 yay -S xsettingsd-git
 
 cp "$DIR"/xsettingsd ~/.xsettingsd
-echo "xsettingsd" > ~/.xsession
+echo "xsettingsd &" >> ~/.xsession
