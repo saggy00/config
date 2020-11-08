@@ -7,6 +7,6 @@ sudo hwclock --systohc
 sudo cp "$DIR"/hostname /etc/hostname
 sudo cp "$DIR"/hosts /etc/hosts
 
-sed -i '/fr_CH.UTF-8 UTF-8/s/^#//' /etc/locale.gen
-locale-gen
+sudo sed -i '/fr_CH.UTF-8 UTF-8/s/^#//' /etc/locale.gen
+sudo locale-gen
 sudo cp "$DIR"/locale.conf /etc/locale.conf
