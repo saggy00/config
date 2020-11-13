@@ -1,0 +1,13 @@
+Set the proper font size:
+$ vim /etc/lightdm/lightdm-gtk-greeter.conf
+Add the following line under "[greeter]":
+xft-dpi=120
+
+Set the DPI on the Xserver:
+$ vim /etc/lightdm/lightdm.conf
+Under the following section "[Seat:*]" have the following line:
+xserver-command=X -dpi 120
+
+Note:
+This resource is very informative:
+https://linuxreviews.org/HOWTO_set_DPI_in_Xorg
