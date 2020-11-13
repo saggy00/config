@@ -15,6 +15,10 @@ cat "$DIR"/xconfig >> ~/.Xresources
 cp "$DIR"/gtkrc-2.0 ~/.gtkrc-2.0
 cp -r "$DIR"/gtk-3.0 ~/.config
 
+# Fix the cursor size in lightdm
+sudo cp -r "$DIR"/gtk-3.0/settings.ini /etc/gtk-3.0/
+
+
 mkdir -p ~/.icons/default
 cp "$DIR"/icons/default/index.theme ~/.icons/default
 
